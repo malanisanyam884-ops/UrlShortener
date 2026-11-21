@@ -1,9 +1,10 @@
 const express=require("express");
 const router=express.Router();
 const urlGenerationLimiter = require("../middleware/rateLimiter");
+const {restrictTo}=require("../middleware/auth");
 const{handleNewShortUrl,verifyPassword}=require("../controllers/url");
 
-router.post("/",urlGenerationLimiter,handleNewShortUrl)
+router.post("/",restrictTo(["NORMAL"]),urlGenerationLimiter,handleNewShortUrl);
 // router.get("/analytics/:x",handleGetAnalytics);
 // router.get("/:shortId",handleRedirectUsers);
 router.post("/:shortId/verify",verifyPassword);

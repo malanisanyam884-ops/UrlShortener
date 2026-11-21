@@ -9,12 +9,13 @@ async function handleUserSignUp(req,res){
         email,
         password, 
     });
-    return res.redirect("/");
+    return res.redirect("/login");
 }
 
     async function handleUserLogIn(req,res){
     const{email,password}=req.body;
     const user=await User.findOne({email,password});
+
     if(!user){return res.render("login",{
         message:"Incorrect email id or password"
     });
@@ -23,13 +24,12 @@ async function handleUserSignUp(req,res){
     // setUser(sessionId,user);
     const token=setUser(user);
     // res.cookie("uid",sessionId);//
-      res.cookie("token", token, {
+    res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 4 * 24 * 60 * 60 * 1000
-});//yes browser meh bhi cookie meh we can send token also instead of uid
-      console.log("verified");
+});
       return res.redirect("/");
     // return res.json({token});//for api calling
     }

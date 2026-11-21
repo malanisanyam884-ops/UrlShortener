@@ -1,41 +1,42 @@
 const URL = require("../models/url");
 const redis = require("../redisClient");
-
-async function handleRedirectUsers(req, res) {
-  const { shortId } = req.params;
-
-  try {
+async function getEntry(shortId) {
     let entry;
-
     // 1. Check Redis cache
     const cachedEntry = await redis.get(`url:${shortId}`);
 
     if (cachedEntry) {
       // CACHE HIT: Read from RAM (<1ms)
       entry = JSON.parse(cachedEntry);
+      await redis.expire(`url:${shortId}`, 86400);
     } else {
       // CACHE MISS: Query MongoDB & save to Redis for 24 hours
-      entry = await URL.findOne({ ShortId: shortId });
-
-      if (!entry) {
-        return res.status(404).send("URL not found");
-      }
-
+      entry = await URL.findOne({ ShortId: shortId }).lean();
+       if (!entry) return null;
       await redis.set(`url:${shortId}`, JSON.stringify(entry), "EX", 86400);//24 hrs=86400 sec
     }
+    return entry;
+  }
 
-    // 2. Password Check
+
+async function handleRedirectUsers(req, res) {
+  const { shortId } = req.params;
+
+  try {
+   const entry = await getEntry(shortId);
+   if (!entry) return res.status(404).send("URL not found");
+  // 2. Password Check
     if (entry.isProtected) {
+      console.log("protected");
       return res.render("verifyPassword", {
         shortId: entry.ShortId,
       });
     }
-
+  //if not protected.
     // 3. Fast Click Count: Push timestamp to Redis list instead of heavy DB update
     await redis.rpush(`visits:${shortId}`, Date.now());
 
     // 4. Redirect immediately
-    // console.log(" it got redirected from redis");
     return res.redirect(entry.redirectURL);
 
   } catch (error) {
@@ -72,4 +73,4 @@ async function syncVisitsToMongoDB() {
   }
 }
 
-module.exports = { handleRedirectUsers,syncVisitsToMongoDB };
+module.exports = { handleRedirectUsers,syncVisitsToMongoDB, getEntry };

@@ -17,10 +17,10 @@ async function getUrlsWithRealtimeClicks(urls) {
       const plainUrl = url.toObject();
 
       // 3. Add MongoDB clicks + Redis pending clicks
+
       plainUrl.TotalClicks =
         (plainUrl.visitHistory ? plainUrl.visitHistory.length : 0) + pendingClicks;
-
-      return plainUrl;
+       return plainUrl;
     })
   );
 }
@@ -44,7 +44,7 @@ router.get("/",restrictTo(["NORMAL","ADMIN"]),async (req,res)=>{
    //  const allurls=await URL.find({});
 
 
-   const urlsWithClicks = await getUrlsWithRealtimeClicks(allurls);
+   const urlsWithClicks = await getUrlsWithRealtimeClicks(allurls);//redis will tell this
    return res.render("home",{
       urls:urlsWithClicks,
       role: req.user.tokenrole === "ADMIN" ? "admin" : "normal"

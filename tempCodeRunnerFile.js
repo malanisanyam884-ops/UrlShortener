@@ -1,1 +1,1 @@
-"/url/:shortId"
+app.use("/",staticRoute);

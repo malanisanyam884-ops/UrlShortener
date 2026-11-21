@@ -3,8 +3,9 @@ const User=require("../models/user");
 //soft middleware//clean code
  function CheckForAuthentication(req,res,next){
     // const authorizationHeader=req.headers["authorization"];
+     req.user=null;
     const tokenCookie=req.cookies?.token;//for browser
-    req.user=null;
+   
     // if(!authorizationHeader||authorizationHeader.startWith("Bearer")){
     //     return next();
     // }
@@ -13,9 +14,7 @@ const User=require("../models/user");
     }
 
     // const token=authorizationHeaders.split("Bearer ")[1];
-    const token=tokenCookie;
-
-    const user=getUser(token);
+    const user=getUser(tokenCookie);
     req.user=user;
     return next();
 }
@@ -23,16 +22,15 @@ const User=require("../models/user");
 //hard middleware as it redirect to login page if find suspicious or unauthorized user
 function restrictTo(roles=[]){
     return async function(req,res,next){//closure
-      
         if(!req.user){return res.redirect("/login");}
-      
       const exist = await User.findById(req.user.tokenid);
     if(!exist){
-    
         res.clearCookie("token");
-        return res.redirect("/login");}
-        if(!roles.includes(req.user.tokenrole)){return res.end("UNAUTHORIZED");}
-            next();
+        return res.redirect("/login");
+    }
+     if(!roles.includes(req.user.tokenrole)){return res.end("UNAUTHORIZED");}
+        next();
+    
 };
 }
 module.exports={

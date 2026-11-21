@@ -3,7 +3,7 @@ const connecttomongodb=require("./connection");
 const URL=require("./models/url")
 const app=express();
 const cookieParser=require("cookie-parser");
-const {CheckForAuthentication,restrictTo}=require("./middleware/auth")
+const {CheckForAuthentication}=require("./middleware/auth");
 const {handleRedirectUsers,syncVisitsToMongoDB}=require("./middleware/redirect")
 
 const path=require("path");
@@ -29,15 +29,10 @@ app.use(cookieParser());
 //soft checking for every routing
 app.use(CheckForAuthentication);
 //routing
-
-app.get("/url/:shortId",handleRedirectUsers);
-app.use("/url",restrictTo(["NORMAL"]),urlRoute);//hard checking
 app.use("/",staticRoute);
+app.get("/url/:shortId",handleRedirectUsers);
+app.use("/url",urlRoute);
 app.use("/user",userRoute);
-
-
-
-
 // Run the sync job every 3 minutes
 setInterval(syncVisitsToMongoDB, 3 * 60 * 1000);
 app.listen(8004,()=>console.log("server started"));
